@@ -2,6 +2,8 @@ package com.example.todolist.notifications
 
 import android.Manifest
 import android.app.AlarmManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -13,6 +15,21 @@ import androidx.core.app.NotificationManagerCompat
 import java.util.*
 
 class NotificationHelper(private val context: Context) {
+
+    fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "Task Reminders"
+            val descriptionText = "Notifications for scheduled tasks"
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val channel = NotificationChannel("task_channel", name, importance).apply {
+                description = descriptionText
+            }
+
+            val notificationManager: NotificationManager =
+                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
 
     @RequiresPermission(Manifest.permission.SCHEDULE_EXACT_ALARM)
     fun scheduleNotification(taskTime: String, taskId: Long) {
@@ -40,6 +57,7 @@ class NotificationHelper(private val context: Context) {
             calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
             calendar.set(Calendar.MINUTE, minute)
             calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
 
             val intent = Intent(context, NotificationReceiver::class.java).apply {
                 putExtra("taskId", taskId)
@@ -52,24 +70,32 @@ class NotificationHelper(private val context: Context) {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                pendingIntent
+            )
+
+            Log.d("NotificationHelper", "Alarm scheduled for: ${calendar.time}")
 
         } catch (e: SecurityException) {
             Log.e("NotificationHelper", "SecurityException: ${e.message}")
+        } catch (e: Exception) {
+            Log.e("NotificationHelper", "Exception: ${e.message}")
         }
     }
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     fun sendNotification(taskId: Long) {
         val notification = NotificationCompat.Builder(context, "task_channel")
-            .setContentTitle("Task Reminders")
-            .setSmallIcon(android.R.drawable.ic_notification_overlay)
+            .setContentTitle("Task Reminder")
             .setContentText("It's time to complete your task!")
+            .setSmallIcon(android.R.drawable.ic_notification_overlay)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()
 
         NotificationManagerCompat.from(context).notify(taskId.toInt(), notification)
+        Log.d("NotificationHelper", "Notification sent for task ID: $taskId")
     }
-
 }

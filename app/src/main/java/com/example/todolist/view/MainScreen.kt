@@ -36,7 +36,7 @@ fun MainScreen(viewModel: TaskViewModel) {
     var editingTask by remember { mutableStateOf<Task?>(null) }
 
     Column(modifier = Modifier.padding(16.dp)) {
-        // App name at the top of the screen
+
         Text(
             text = "My To-Do List",
             style = MaterialTheme.typography.headlineMedium,
@@ -45,36 +45,36 @@ fun MainScreen(viewModel: TaskViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Task Title Input
+
         OutlinedTextField(
             value = taskTitle,
             onValueChange = { taskTitle = it },
             label = { Text("Task Title") },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(onNext = { /* Navigate to next input field */ })
+            keyboardActions = KeyboardActions(onNext = { })
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Task Description Input
+
         OutlinedTextField(
             value = taskDescription,
             onValueChange = { taskDescription = it },
             label = { Text("Task Description") },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(onNext = { /* Navigate to next input field */ })
+            keyboardActions = KeyboardActions(onNext = {  })
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Time picker button
+
         TextButton(onClick = { isTimePickerVisible = true }) {
             Text(text = if (taskTime.isNotEmpty()) "Set Time: $taskTime" else "Set Time")
         }
 
-        // Time picker dialog
+
         if (isTimePickerVisible) {
             val context = LocalContext.current
             TimePickerDialog(
@@ -82,7 +82,6 @@ fun MainScreen(viewModel: TaskViewModel) {
                 { _, selectedHour, selectedMinute ->
                     hour = selectedHour
                     minute = selectedMinute
-                    // Format time to show AM/PM
                     val amPm = if (hour < 12) "AM" else "PM"
                     val displayHour = if (hour % 12 == 0) 12 else hour % 12
                     taskTime = "$displayHour:$minute $amPm"
@@ -96,7 +95,7 @@ fun MainScreen(viewModel: TaskViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Task Reminder Time Input
+
         OutlinedTextField(
             value = taskTime,
             onValueChange = { taskTime = it },
@@ -107,13 +106,13 @@ fun MainScreen(viewModel: TaskViewModel) {
                 onDone = {
                     if (taskTitle.isNotBlank()) {
                         if (isEditing && editingTask != null) {
-                            // Update existing task
+
                             viewModel.updateTask(editingTask!!, taskTitle, taskDescription, taskTime)
                         } else {
-                            // Add new task
+
                             viewModel.addTask(taskTitle, taskDescription, taskTime)
                         }
-                        // Reset fields
+
                         taskTitle = ""
                         taskDescription = ""
                         taskTime = ""
@@ -126,15 +125,15 @@ fun MainScreen(viewModel: TaskViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Add Task Button
+
         Button(
             onClick = {
                 if (taskTitle.isNotBlank() && taskTime.isNotBlank()) {
                     if (isEditing && editingTask != null) {
-                        // Update existing task
+
                         viewModel.updateTask(editingTask!!, taskTitle, taskDescription, taskTime)
                     } else {
-                        // Add new task
+
                         viewModel.addTask(taskTitle, taskDescription, taskTime)
                     }
                     taskTitle = ""
@@ -151,7 +150,7 @@ fun MainScreen(viewModel: TaskViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Display Added Tasks
+
         LazyColumn {
             items(viewModel.tasks) { task ->
                 TaskItem(
@@ -159,7 +158,7 @@ fun MainScreen(viewModel: TaskViewModel) {
                     onCheckedChange = { viewModel.toggleTask(task) },
                     onDelete = { viewModel.deleteTask(task) },
                     onEdit = {
-                        // Set the task data into the form for editing
+
                         taskTitle = task.title
                         taskDescription = task.description
                         taskTime = task.time

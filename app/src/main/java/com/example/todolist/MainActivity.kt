@@ -1,18 +1,23 @@
 package com.example.todolist
 
+import android.Manifest
 import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.example.todolist.view.MainScreen
 import com.example.todolist.viewmodel.TaskViewModel
@@ -23,10 +28,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Create notification channel for task reminders
+
         createNotificationChannel()
 
-        // Request permission to schedule exact alarms on Android 12+
+
+        requestPostNotificationPermission()
+
+
         requestExactAlarmPermission()
 
         setContent {
@@ -41,15 +49,24 @@ class MainActivity : ComponentActivity() {
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                "task_channel", // Channel ID
-                "Task Channel", // Channel name
-                NotificationManager.IMPORTANCE_HIGH // Importance level
+                "task_channel",
+                "Task Channel",
+                NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = "Channel for task reminders"
             }
 
             val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             manager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun requestPostNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val permission = Manifest.permission.POST_NOTIFICATIONS
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, arrayOf(permission), 1001)
+            }
         }
     }
 
